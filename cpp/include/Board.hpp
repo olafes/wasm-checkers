@@ -1,0 +1,11 @@
+typedef unsigned long long int u64;
+class Board {
+private:
+  static const u64 BOARD = 0b11111111111111111111111111111111111111111111111111;
+  static const u64 MASK_EVEN_ROW = 0b11111000001111100000111110000011111000001111100000;
+  static const u64 MASK_ODD_ROW = 0b00000111110000011111000001111100000111110000011111;
+
+public:
+  Board (arguments);
+  virtual ~Board ();
+};

@@ -1,5 +1,5 @@
 #include <iostream>
-#include "include/Board.hpp"
+#include "./include/Board.hpp"
 // extern "C" {
 //   int test(int);
 // }
@@ -9,6 +9,8 @@
 
 // const u64 BOARD =
 int main() {
-  // std::cout << BOARD << std::endl;
+  Board board;
+  board.getLegalMoves();
+
   return 0;
 }

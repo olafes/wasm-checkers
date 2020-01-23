@@ -1,5 +1,5 @@
 #include <iostream>
-#include "./include/Board.hpp"
+#include "./include/Tree.hpp"
 // extern "C" {
 //   int test(int);
 // }
@@ -9,8 +9,14 @@
 
 // const u64 BOARD =
 int main() {
-  Board board;
-  board.getLegalMoves();
+  // Board board;
+  // board.getLegalMoves();
 
+  // Node tree(1, 2);
+  // std::vector<Node*> *children = tree.getChildren();
+  // std::cout << children->size() << std::endl;
+  // Node child(2, 3);
+  // tree.addChild(&child);
+  // std::cout << children->size() << std::endl;
   return 0;
 }

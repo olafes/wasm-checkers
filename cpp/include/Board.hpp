@@ -32,6 +32,7 @@ private:
   u8 tour;
   bool white_to_move;
 
+  Node* calculateCapturesWhite();
 public:
   Board();
   Board(u64 white, u64 black, bool white_to_move);

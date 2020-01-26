@@ -1,3 +1,4 @@
 module.hot.accept();
-import './js/main.js';
 import './sass/main.sass';
+import './sass/draughts.sass';
+import './js/main.js';

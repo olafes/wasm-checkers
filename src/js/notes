@@ -1,0 +1,88 @@
+// import { DraughtsBoard } from './Board.js'
+//
+// const $main = document.querySelector('main');
+// const $template = document.querySelector('#draughtsTemplate');
+// console.log('main', $main);
+// const board = new DraughtsBoard($template, $main);
+// board.loadFEN("W:W24,31,32,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50:B1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,19,20,29");
+
+
+Module.onRuntimeInitialized = () => {
+
+
+  // const tmp = [0, 2, 3, 5];
+  // const arr = new Uint8Array(tmp.length);
+  // for (let i=0; i<tmp.length; i++)
+  //   arr[i] = tmp[i];
+  // const ptr = Module._malloc(arr.length*arr.BYTES_PER_ELEMENT);
+  // Module.HEAPU8.set(arr, ptr);
+  // console.log(Module._bitboard(ptr, arr.length));
+  // Module._free(ptr);
+};
+
+
+// let x = 64;
+// console.log(x&(x-1));
+// console.log(board._bitboardToIndicies(1));
+// Module.onRuntimeInitialized = () => {
+//   console.log(Module._test(10));
+// };
+// const WIDTH = 100;
+// const HEIGHT = 100;
+//
+// const $board = document.querySelector('.board');
+// const whitePieceTemplate = document.querySelector('#whiteMan').content;
+// const whiteKingTemplate = document.querySelector('#whiteKing').content;
+// const blackPieceTemplate = document.querySelector('#blackMan').content;
+// const blackKingTemplate = document.querySelector('#blackKing').content;
+//
+// const $squares = $board.querySelectorAll('.square');
+//
+// const $piece = document.createElement('div');
+// let $drag = $piece;
+//
+// for (const $square of $squares) {
+//   $square.addEventListener('dragover', e => {
+//     e.preventDefault();
+//     // console.log('dragenter', e);
+//   });
+//   $square.addEventListener('dragover', e => {
+//     e.preventDefault();
+//     // console.log('dragover', e);
+//   });
+//   $square.addEventListener('drop', e => {
+//     // console.log($drag);
+//     $drag.style.left = `${e.target.offsetLeft}px`;
+//     $drag.style.top = `${e.target.offsetTop}px`;
+//     console.log('dropped', e);
+//   });
+// }
+//
+//
+// // $board.addEventListener('drop', () => console.log('xd'));
+// // const $piece = whitePieceTemplate.cloneNode(true);
+// // $piece.querySelector('div').addEventListener('click', () => {
+// //   console.log('???');
+// // });
+//
+//
+//
+// $piece.className = 'piece white';
+// $piece.setAttribute('draggable', true);
+// $piece.innerHTML = 'M';
+//
+// $piece.addEventListener('dragstart', () => {
+//   $drop = $piece;
+//   console.log('huj');
+// });
+//
+//
+// const indexToCords = index => {
+//
+// };
+//
+// console.log(0, indexToCords(0));
+// console.log(6, indexToCords(6));
+// console.log(33, indexToCords(33));
+//
+// $board.appendChild($piece);

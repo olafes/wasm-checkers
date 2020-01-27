@@ -1,22 +1,31 @@
 #include <iostream>
-#include "./include/Tree.hpp"
-// extern "C" {
-//   int test(int);
-// }
-// int test(int a) {
-//   return a*2;
-// }
 
-// const u64 BOARD =
-int main() {
-  // Board board;
-  // board.getLegalMoves();
+typedef char u8;
+typedef unsigned long long int u64;
 
-  // Node tree(1, 2);
-  // std::vector<Node*> *children = tree.getChildren();
-  // std::cout << children->size() << std::endl;
-  // Node child(2, 3);
-  // tree.addChild(&child);
-  // std::cout << children->size() << std::endl;
-  return 0;
-}
+extern "C" {
+  void init(u8 whiteMen[],
+      u8 whiteMenLength,
+      u8 whiteKings[],
+      u8 whiteKingsLength,
+      u8 blackMen[],
+      u8 blackMenLength,
+      u8 blackKings[],
+      u8 blackKingsLength,
+      bool playerToMove);
+  u8* getWhiteMen();
+  u8* getWhiteKings();
+  u8* getBlackMen();
+  u8* getBlackKings();
+  bool getPlayerToMove();
+  void setWhiteMen(u8 whiteMen[], u8 whiteMenLength);
+  void setWhiteKings(u8 whiteKings[], u8 whiteKingsLength);
+  void setBlackMen(u8 blackMen[], u8 blackMenLength);
+  void setBlackKings(u8 blackKings[], u8 blackKingsLength);
+  void setPlayerToMove(bool playerToMove);
+  bool isLegalMove(u8 chunks[], u8 chunksLength);
+  u8* getLegalMoves();
+  u8* getLegalMovesFor(u8 from);
+  void move(u8 chunks[], u8 chunksLength);
+  u8 getResult();
+};

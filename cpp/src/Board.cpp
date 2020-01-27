@@ -1,94 +1,101 @@
 #include "../include/Board.hpp"
-#include <iostream>
-
-Board::Board() {
-  this->white = 0b11111111111111111111000100000000000000000000000000;
-          //0b 11111 11111 11111 11111 00010 00000 00000 00000 00000 00000
-  this->black = 0b00000000000000000000000000001011110111111111111111;
-          //0b 00000 00000 00000 00000 00000 00010 11110 11111 11111 11111
-  this->tour = 1;
-  this->white_to_move = true;
+//private
+const u8 Board::JUMPER_MEN_OPPOSITE_DIRECTIONS[] = {2, 3, 0, 1};
+const u64 Board::MASK_JUMPER_MEN_BORDER[] = {
+  0b01111011110111101111011110111101111011110000000000,
+  0b11110111101111011110111101111011110111100000000000,
+  0b00000000001111011110111101111011110111101111011110,
+  0b00000000000111101111011110111101111011110111101111
 };
+// const u8 Board::SHIFT_ODD_MOVE[] = {};
 
-u64 Board::getEmpty(u64 white, u64 black) {
-  return (~(white|black))&BOARD;
+u64 Board::getEmpty(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings) {
+  return (~(whiteMen|whiteKings|blackMen|blackKings))&Board::MASK_BOARD;
 }
-std::vector<u64> Board::getWhiteJumpers(u64 white, u64 black) {
-  u64 empty = getEmpty();
-
-  u64 empty_jumpers0 = empty&MASK_JUMPERS_0;
-  u64 empty_jumpers1 = empty&MASK_JUMPERS_1;
-  u64 empty_jumpers2 = empty&MASK_JUMPERS_2;
-  u64 empty_jumpers3 = empty&MASK_JUMPERS_3;
-
-  std::vector<u64> jumpers {
-    (((((empty_jumpers0&MASK_EVEN_ROW)<<6)&black)<<5)&white)|(((((empty_jumpers0&MASK_EVEN_ROW)<<5)&black)<<6)&white),
-    (((((empty_jumpers1&MASK_EVEN_ROW)<<5)&black)<<4)&white)|(((((empty_jumpers1&MASK_EVEN_ROW)<<4)&black)<<5)&white),
-    (((((empty_jumpers2&MASK_EVEN_ROW)>>5)&black)>>6)&white)|(((((empty_jumpers2&MASK_EVEN_ROW)>>6)&black)>>5)&white),
-    (((((empty_jumpers3&MASK_EVEN_ROW)>>4)&black)>>5)&white)|(((((empty_jumpers3&MASK_EVEN_ROW)>>5)&black)>>4)&white)
-  };
-
-  return jumpers;
+u64 Board::moveEvenSquares(u64 bitboard, u8 direction) {
+  bitboard &= Board::MASK_EVEN_ROW;
+  switch (direction) {
+    case 0:
+      bitboard = bitboard >> 4;
+      break;
+    case 1:
+      bitboard = bitboard >> 5;
+      break;
+    case 2:
+      bitboard = bitboard << 5;
+      break;
+    case 3:
+      bitboard = bitboard << 6;
+      break;
+    return bitboard;
+  }
 }
-std::vector<u64> Board::getBlackJumpers(u64 white, u64 black) {
-  u64 empty = getEmpty();
-
-  u64 empty_jumpers0 = empty&MASK_JUMPERS_0;
-  u64 empty_jumpers1 = empty&MASK_JUMPERS_1;
-  u64 empty_jumpers2 = empty&MASK_JUMPERS_2;
-  u64 empty_jumpers3 = empty&MASK_JUMPERS_3;
-
-  std::vector<u64> jumpers {
-    (((((empty_jumpers0&MASK_EVEN_ROW)<<6)&white)<<5)&black)|(((((empty_jumpers0&MASK_EVEN_ROW)<<5)&white)<<6)&black),
-    (((((empty_jumpers1&MASK_EVEN_ROW)<<5)&white)<<4)&black)|(((((empty_jumpers1&MASK_EVEN_ROW)<<4)&white)<<5)&black),
-    (((((empty_jumpers2&MASK_EVEN_ROW)>>5)&white)>>6)&black)|(((((empty_jumpers2&MASK_EVEN_ROW)>>6)&white)>>5)&black),
-    (((((empty_jumpers3&MASK_EVEN_ROW)>>4)&white)>>5)&black)|(((((empty_jumpers3&MASK_EVEN_ROW)>>5)&white)>>4)&black)
-  };
-
-  return jumpers;
+u64 Board::moveOddSquares(u64 bitboard, u8 direction) {
+  bitboard &= Board::MASK_ODD_ROW;
+  switch (direction) {
+    case 0:
+      bitboard = bitboard >> 5;
+      break;
+    case 1:
+      bitboard = bitboard >> 6;
+      break;
+    case 2:
+      bitboard = bitboard << 4;
+      break;
+    case 3:
+      bitboard = bitboard << 5;
+      break;
+    return bitboard;
+  }
 }
-std::vector<u64> Board::getWhiteMovers(u64 white, u64 black) {
-  u64 empty = getEmpty();
-
-  std::vector<u64> movers {
-    (((empty&MASK_WHITE_MOVERS_EVEN0)<<6)&white)|(((empty&MASK_ODD_ROW)<<5)&white),
-    (((empty&MASK_EVEN_ROW)<<5)&white)|(((empty&MASK_WHITE_MOVERS_EVEN1)<<4)&white)
-  };
-
-  return movers;
+u64 Board::getJumperMen(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction) {
+  u64 tmp = Board::getEmpty(whiteMen, whiteKings, blackMen, blackKings)&Board::MASK_JUMPER_MEN_BORDER[direction];
+  u8 oppositeDirection = BOARD::JUMPER_MEN_OPPOSITE_DIRECTIONS[direction];
+  tmp = moveEvenSquares(tmp, oppositeDirection)|moveOddSquares(tmp, oppositeDirection);
+  tmp &= blackMen|blackKings;
+  tmp = moveEvenSquares(tmp, oppositeDirection)|moveOddSquares(tmp, oppositeDirection);
+  tmp &= whiteMen;
+  return tmp;
 }
-std::vector<u64> Board::getBlackMovers() {
-  u64 empty = getEmpty();
-
-  std::vector<u64> movers;
-
-  //todo nie chce mi sie na razie tego robic
-  return movers;
+u64 Board::getJumperKings(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction) {
+  return 0;
 }
-u64 Board::getWhite() {
-  return this->white;
+
+//public
+void init(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, bool playerToMove) {
+  Board::whiteMen = whiteMen;
+  Board::whiteKings = whiteKings;
+  Board::blackMen = blackMen;
+  Board::blackKings = blackKings;
+  Board::playerToMove = playerToMove;
+}
+u64 Board::getWhiteMen() {
+  return Board::whiteMen;
+}
+u64 Board::getWhiteKings() {
+  return Board::whiteKings;
 }
 u64 Board::getBlack() {
-  return this->black;
+  return Board::blackMen;
 }
-
-std::vector<Move> Board::getLegalCaptures(u64 white, u64 black) {
-  std::vector<Move> moves;
-  std::vector<u64> jumpers = getWhiteJumpers(white, black);
-
-  u64 sum = jumpers[0]|jumpers[1]|jumpers[2]|jumpers[3]
-  if (!sum)
-    return moves;
-
-  if (jumpers[0]) {
-    do {
-      u64 x = jumpers[0]&(~(jumpers[0]-1));
-      jumpers[0] &= ~x;
-      white &= ~x;
-      white |= x>>11;
-      black &= ~((((x&MASK_EVEN_ROW)>>5))||((x&MASK_ODD_ROW)>>6));
-    } while (x);
-  }
-
-  return moves;
+u64 Board::getBlackKings() {
+  return Board::blackKings;
+}
+bool Board::getPlayerToMove() {
+  return Board::playerToMove;
+}
+void Board::setWhiteMen(u64 whiteMen) {
+  Board::whiteMen = whiteMen;
+}
+void Board::setWhiteKings(u64 whiteKings) {
+  Board::whiteKings = whiteKings;
+}
+void Board::setBlackMen(u64 blackMen) {
+  Board::blackMen = blackMen;
+}
+void Board::setBlackKings(u64 blackKings) {
+  Board::blackKings = blackKings;
+}
+void Board::setPlayerToMove(bool playerToMove) {
+  Board::playerToMove = playerToMove;
 }

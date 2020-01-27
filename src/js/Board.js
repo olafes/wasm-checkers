@@ -81,7 +81,16 @@ export class DraughtsBoard {
     }
     return {move, pieces};
   }
-
+  _bitboardToIndicies(bitboard) {
+    const tmp = [];
+    let x = null;
+    do {
+      x = bitboard&(~(bitboard-1));
+      bitboard &= ~x;
+      tmp.push(Math.log(x) / Math.log(2));
+    } while (bitboard);
+    return tmp;
+  }
   setPiece(piece, index) {
     console.log('piece', piece);
     const $piece = document.importNode(this.template.pieces[`$${piece}`], true);

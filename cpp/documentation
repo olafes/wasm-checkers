@@ -1,0 +1,113 @@
+general:
+  board is represented as 4 64bit unsigned integer bitboards
+  playerToMove 0 - white, 1 - black
+
+  function parameters representing board state are passed as arrays of u8 indices
+  counting from left top to right bottom
+  __00__01__02__03__04
+  05__06__07__08__09__
+  __10__11__12__13__14
+  15__16__17__18__19__
+  __20__21__22__23__24
+  25__26__27__28__29__
+  __30__31__32__33__34
+  35__36__37__38__39__
+  __40__41__42__43__44
+  45__46__47__48__49__
+
+  rows are counted from 0 to 9 from top to bottom
+
+  wasm module returns array of n length by returning pointer to array of n+1 length, where 0 element is
+  the number n
+
+  the array [1, 2, 3, 4] would be returned as pointer to [4, 1, 2, 3, 4]
+
+  to preserve information about captures, each move is passed as array of chunk moves, indicating
+  positions of squares that piece lands on during the full move
+
+  there are 4 directions on the board represented as numbers 0 1 2 3
+   1   0
+     x
+   2   3
+
+wasm functions:
+> void init(
+    u8 whiteMen[],
+    u8 whiteMenLength,
+    u8 whiteKings[],
+    u8 whiteKingsLength,
+    u8 blackMen[],
+    u8 blackMenLength,
+    u8 blackKings[],
+    u8 blackKingsLength,
+    bool playerToMove
+  )
+  u8 whiteMen, u8 whiteKings, u8 blackMen, u8 blackKings - pointers to arrays containing positions of pieces
+  u8 whiteMenLength, u8 whiteKingsLength, u8 blackMenLength, u8 blackKingsLength - lengths of arrays
+  bool playerToMove -
+
+  initalizes game and sets current position
+
+> u8* getWhiteMen()
+  returns pointer to array containing white men indices
+
+> u8* getWhiteKings()
+  returns pointer to array containing white kings indices
+
+> u8* getBlackMen()
+  returns pointer to array containing black men indices
+
+> u8* getBlackKings()
+  returns pointer to array containing black kings indices
+
+> bool getPlayerToMove()
+  returns player to move
+
+> void setWhiteMen(u8 whiteMen[], u8 whiteMenLength)
+
+
+> void setWhiteKings(u8 whiteKings[], u8 whiteKingsLength)
+
+
+> void setBlackMen(u8 blackMen[], u8 blackMenLength)
+
+
+> void setBlackKings(u8 blackKings[], u8 blackKingsLength)
+
+
+> void setPlayerToMove(bool playerToMove)
+
+
+> bool isLegalMove(u8 chunks[], u8 chunksLength)
+
+
+> u8* getLegalMoves()
+  returns pointer to array containing legal moves for player based on variable playerToMove
+
+  [n, k=3, move_1_chunk_1, move_1_chunk_2, move_1_chunk3, move_2_chunk_1, move_2_chunk_2, move_2_chunk_3 ...]
+
+  k >= 2
+  where k indicates the chunks of moves
+  when k=2 each move moves piece or captures one piece
+  from to
+  when k=3 each move captures 2 pieces
+  from to to
+  when k=4 each move captures 3 pieces
+  from to to to
+
+  ...
+
+
+> u8* getLegalMovesFor(u8 from)
+  get legal moves for specific piece occupying square with index [from]
+
+  return format is the same as above
+
+> void move(u8 chunks[], u8 chunksLength)
+  moves piece from chunks[0] to chunks[chunksLength-1]
+
+> u8 getResult()
+  returns  1 if white wins
+           0 if game is a draw
+          -1 if black wins
+           null if the game is not over yet

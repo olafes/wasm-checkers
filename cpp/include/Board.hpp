@@ -2,44 +2,40 @@
 #define BOARD_HPP
 
 #include <vector>
-#include "Move.hpp"
-#include "Tree.hpp"
 
+typedef char u8;
 typedef unsigned long long int u64;
-typedef unsigned short int u8;
 
 class Board {
 private:
-  static const u64 BOARD = 0b11111111111111111111111111111111111111111111111111;
-  static const u64 MASK_EVEN_ROW = 0b11111000001111100000111110000011111000001111100000;
-  static const u64 MASK_ODD_ROW = 0b00000111110000011111000001111100000111110000011111;
-  static const u64 MASK_JUMPERS_0 = 0b00000000000111101111011110111101111011110111101111;
-  static const u64 MASK_JUMPERS_1 = 0b00000000001111011110111101111011110111101111011110;
-  static const u64 MASK_JUMPERS_2 = 0b11111111111111011110111101111011110111101111011110;
-  static const u64 MASK_JUMPERS_3 = 0b01111011110111101111011110111101111011110000000000;
-  static const u64 MASK_WHITE_MOVERS_EVEN0 = 0b00000000000111100000011110000001111000000111100000;
-  static const u64 MASK_WHITE_MOVERS_EVEN1 = 0b00000111100000011110000001111000000111100000011110;
-  //todo mask white movers odd
-  //todo mask black
+  static const u64 MASK_BOARD = 0b11111111111111111111111111111111111111111111111111;
+  static const u64 MASK_EVEN_ROW = 0b00000111110000011111000001111100000111110000011111;
+  static const u64 MASK_ODD_ROW = 0b11111000001111100000111110000011111000001111100000;
+  static const u8 MASK_JUMPER_MEN_BORDER[];
+  static const u8 JUMPER_MEN_OPPOSITE_DIRECTIONS[];
   static u64 getEmpty(u64 white, u64 black);
-  static std::vector<u64> getWhiteJumpers(u64 white, u64 black);
-  static std::vector<u64> getBlackJumpers(u64 white, u64 black);
-  static std::vector<u64> getWhiteMovers(u64 white, u64 black);
-  static std::vector<u64> getBlackMovers(u64 white, u64 black);
+  static u64 moveEvenSquares(u64 bitboard, u8 direction);
+  static u64 moveOddSquares(u64 bitboard, u8 direction);
+  static u64 getJumperMen(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction);
+  static u64 getJumperKings(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction);
+  static u64 whiteMen;
+  static u64 whiteKings;
+  static u64 blackMen;
+  static u64 blackKings;
+  static bool whiteToMove;
 
-  u64 white;
-  u64 black;
-  u8 tour;
-  bool white_to_move;
-
-  Node* calculateCapturesWhite();
 public:
-  Board();
-  Board(u64 white, u64 black, bool white_to_move);
-  u64 getWhite();
-  u64 getBlack();
-  std::vector<Move> getLegalCaptures();
-  u64 move(Move move);
+  void init(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, bool playerToMove);
+  u64 getWhiteMen();
+  u64 getWhiteKings();
+  u64 getBlackMen();
+  u64 getBlackKings();
+  bool getPlayerToMove();
+  void setWhiteMen(u64 whiteMen);
+  void setWhiteKings(u64 whiteKings);
+  void setBlackMen(u64 blackMen);
+  void setBlackKings(u64 blackKings);
+  void setPlayerToMove(bool playerToMove);
 };
 
 #endif

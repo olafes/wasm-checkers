@@ -1,0 +1,35 @@
+#include <iostream>
+#define R2(n)     n,     n + 2*64,     n + 1*64,     n + 3*64
+#define R4(n) R2(n), R2(n + 2*16), R2(n + 1*16), R2(n + 3*16)
+#define R6(n) R4(n), R4(n + 2*4 ), R4(n + 1*4 ), R4(n + 3*4 )
+
+typedef unsigned long long int u64;
+typedef char u8;
+
+u64 table[256] = { R6(0), R6(2), R6(1), R6(3) };
+
+extern "C" {
+  u64 bitboard(u8 indices[], u8 length);
+}
+
+u64 bitboard(u8 indices[], u8 length) {
+  u64 x = 0;
+  for (u8 i=0; i<length; i++)
+    x |= 1ULL << indices[i];
+  return x;
+}
+
+
+u64 reverse(u64 n)
+{
+  // u64 reversed = table[n&0xff] << 56;
+  // return reversed;
+  return table[n&0xff]<<56|table[(n>>8)&0xff]<<48|table[(n>>16)&0xff]<<40|table[(n>>24)&0xff]<<32|table[(n>>32)&0xff]<<24|table[(n>>40)]<<16|table[(n>>48)&0xff]<<8|table[(n>>56)&0xff];
+}
+
+int main() {
+  // u64 x = 11232131;
+  // std::cout << x << std::endl;
+  // std::cout << reverse(x) << std::endl;
+  return 0;
+}

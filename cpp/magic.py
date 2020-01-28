@@ -65,6 +65,20 @@ def indicesToBits(indices):
         x += 2**(index)
     return x
 
+startpos = {
+    # "whiteMen": [x+30 for x in range(20)],
+    "whiteMen": [10],
+    "whiteKings": [],
+    # "blackMen": [x for x in range(20)],
+    "blackMen": [6],
+    "blackKings": []
+}
+
+for name, bitboard in startpos.items():
+    x = indicesToBits(bitboard)
+    x = f"{x:#066b}".strip()
+    print(f"u64 {name} = {x};")
+
 # n = 14
 # i0 = getRightTop(n)
 # print(i0)
@@ -81,28 +95,29 @@ def indicesToBits(indices):
 #
 
 # print(f"{x2:#02x}")
-data = '{'
-for i in range(50):
-    x = 2**(i)
-    x_0 = indicesToBits(getRightTop(i))
-    x_1 = indicesToBits(getLeftTop(i))
-    x_2 = indicesToBits(getLeftBottom(i))
-    x_3 = indicesToBits(getRightBottom(i))
-    data += f"{x:#02x}"
-    data += ", {\n"
-    data += f"{x_0:#66b}"
-    data += "\n"
-    data += f"{x_1:#66b}"
-    data += "\n"
-    data += f"{x_2:#66b}"
-    data += "\n"
-    data += f"{x_3:#66b}"
-    data += "}},\n"
-
-data += "}"
-
-with open('magic.txt', 'w') as file:
-    file.write(data)
+# data = '{'
+# for i in range(50):
+#     x = 2**(i)
+#     x_0 = indicesToBits(getRightTop(i))
+#     x_1 = indicesToBits(getLeftTop(i))
+#     x_2 = indicesToBits(getLeftBottom(i))
+#     x_3 = indicesToBits(getRightBottom(i))
+#     data += "\n{"
+#     data += f"{x:#02x}"
+#     data += ", {"
+#     data += f"{x_0:#66b},".strip()
+#     # data += "\n"
+#     data += f"{x_1:#66b},".strip()
+#     # data += "\n"
+#     data += f"{x_2:#66b},".strip()
+#     # data += "\n"
+#     data += f"{x_3:#66b}".strip()
+#     data += "}},"
+#
+# data = data[:-1] + "}"
+#
+# with open('magic.txt', 'w') as file:
+#     file.write(data)
 
 # print(f"costam costam {x0:#066b}")
 # print(f"costam costam {x1:#066b}")

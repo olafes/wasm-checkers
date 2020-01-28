@@ -1,4 +1,5 @@
 #include <iostream>
+#include "./include/Board.hpp"
 
 typedef char u8;
 typedef unsigned long long int u64;
@@ -29,3 +30,22 @@ extern "C" {
   void move(u8 chunks[], u8 chunksLength);
   u8 getResult();
 };
+
+int main() {
+  // u64 x = 2ULL;
+  // u64 y = Board::moveEvenSquares(x, 2);
+  // u64 z = Board::moveOddSquares(x, 2);
+  // std::cout << x << " " <<  y << " " << z << std::endl;
+
+
+  // 1111011110111101111011110111101110011110
+  u64 whiteMen = 0b0000000000000000000000000000000000000000000000000000010000000000;
+  u64 whiteKings = 0b0000000000000000000000000000000000000000000000000000000000000000;
+  u64 blackMen = 0b0000000000000000000000000000000000000000000000000000000001000000;
+  u64 blackKings = 0b0000000000000000000000000000000000000000000000000000000000000000;
+  std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 0) << std::endl;
+  std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 1) << std::endl;
+  std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 2) << std::endl;
+  std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 3) << std::endl;
+  return 0;
+}

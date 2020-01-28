@@ -67,10 +67,10 @@ def indicesToBits(indices):
 
 startpos = {
     # "whiteMen": [x+30 for x in range(20)],
-    "whiteMen": [10],
+    "whiteMen": [12, 13, 16],
     "whiteKings": [],
     # "blackMen": [x for x in range(20)],
-    "blackMen": [6],
+    "blackMen": [6, 7, 9, 21, 32],
     "blackKings": []
 }
 

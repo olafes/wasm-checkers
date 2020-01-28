@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <map>
+#include <iostream>
+#include "./Node.hpp"
 
 typedef char u8;
 typedef unsigned long long int u64;
@@ -42,7 +44,8 @@ public:
   static void makeKingMove(u64*king, u64* whiteKings, u64 landing);
   static void makeKingCapture(u64*king, u64* whiteKings, u64* blackMen, u64* blackKings, u64 landing, u64 target);
 
-  static void calculateManCaptures(u64 man, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings)
+  static void calculateManCaptures(u64 man, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 count, u8* n, Node* tree, std::vector<Node*>* found);
+  static void getMenCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, std::vector<std::vector<u64>*>* captures);
 
   // real public
   static u64 getWhiteMen();

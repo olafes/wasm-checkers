@@ -39,13 +39,27 @@ int main() {
 
 
   // 1111011110111101111011110111101110011110
-  u64 whiteMen = 0b0000000000000000000000000000000000000000000000000000010000000000;
+
+
+
+  u64 whiteMen = 0b0000000000000000000000000000000000000000000000010011000000000000;
   u64 whiteKings = 0b0000000000000000000000000000000000000000000000000000000000000000;
-  u64 blackMen = 0b0000000000000000000000000000000000000000000000000000000001000000;
+  u64 blackMen = 0b0000000000000000000000000000000100000000001000000000001011000000;
   u64 blackKings = 0b0000000000000000000000000000000000000000000000000000000000000000;
-  std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 0) << std::endl;
-  std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 1) << std::endl;
-  std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 2) << std::endl;
-  std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 3) << std::endl;
+  std::vector<std::vector<u64>*> captures;
+  Board::getMenCaptures(whiteMen, whiteKings, blackMen, blackKings, &captures);
+  for (auto& capture : captures) {
+    std::cout << "capture" << std::endl;
+    for (auto& move : *capture) {
+      std::cout << move << std::endl;
+    }
+  }
+
+  // Node tree(10);
+  // std::cout << tree.position << std::endl;
+  // std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 0) << std::endl;
+  // std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 1) << std::endl;
+  // std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 2) << std::endl;
+  // std::cout << Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 3) << std::endl;
   return 0;
 }

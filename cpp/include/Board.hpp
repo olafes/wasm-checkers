@@ -12,7 +12,7 @@ typedef unsigned long long int u64;
 struct kingMoveChunk {
   u64 from;
   u64 capture;
-  u64 to;
+  std::vector<u64> landing;
 };
 
 class Board {
@@ -21,6 +21,7 @@ private:
   static const u64 MASK_EVEN_ROW = 0b00000111110000011111000001111100000111110000011111;
   static const u64 MASK_ODD_ROW = 0b11111000001111100000111110000011111000001111100000;
   static const u64 MASK_JUMPER_MEN_BORDER[];
+  static const u64 MASK_BORDER[];
   static const std::map<u64, std::vector<u64>> MASK_KING_ATTACK;
   static const u8 JUMPER_MEN_OPPOSITE_DIRECTIONS[];
   static u64 getMSB(u64 bitboard);
@@ -46,7 +47,8 @@ public:
 
   static void calculateManCaptures(u64 man, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 count, u8* n, Node* tree, std::vector<Node*>* found);
   static void getMenCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, std::vector<std::vector<u64>*>* captures);
-
+  static void calculateKingCaptures(u64 man, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 count, u8* n, Node* tree, std::vector<Node*>* found);
+  static void getKingsCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, std::vector<std::vector<u64>*>* captures);
   // real public
   static u64 getWhiteMen();
   static u64 getWhiteKings();

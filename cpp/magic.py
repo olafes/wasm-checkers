@@ -65,13 +65,20 @@ def indicesToBits(indices):
         x += 2**(index)
     return x
 
+# startpos = {
+#     # "whiteMen": [x+30 for x in range(20)],
+#     "whiteMen": [12, 13, 16],
+#     "whiteKings": [],
+#     # "blackMen": [x for x in range(20)],
+#     "blackMen": [6, 7, 9, 21, 32],
+#     "blackKings": []
+# }
+
 startpos = {
-    # "whiteMen": [x+30 for x in range(20)],
-    "whiteMen": [12, 13, 16],
-    "whiteKings": [],
-    # "blackMen": [x for x in range(20)],
-    "blackMen": [6, 7, 9, 21, 32],
-    "blackKings": []
+    "0": [0, 1, 2, 3, 4, 14, 24, 34, 44],
+    "1": [0, 1, 2, 3, 4, 5, 15, 25, 35, 45],
+    "2": [5, 15, 25, 35, 45, 46, 47, 48, 49],
+    "3": [4, 14, 24, 34, 44, 45, 46, 47, 48, 49]
 }
 
 for name, bitboard in startpos.items():

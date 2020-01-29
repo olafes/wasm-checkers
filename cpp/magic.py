@@ -74,17 +74,17 @@ def indicesToBits(indices):
 #     "blackKings": []
 # }
 
-startpos = {
-    "0": [5, 15, 25, 35, 45, 46, 47, 48, 49],
-    "1": [4, 14, 24, 34, 44, 45, 46, 47, 48, 49],
-    "2": [0, 1, 2, 3, 4, 14, 24, 34, 44],
-    "3": [0, 1, 2, 3, 4, 5, 15, 25, 35, 45]
-}
-
-for name, bitboard in startpos.items():
-    x = indicesToBits(bitboard)
-    x = f"{x:#066b}".strip()
-    print(f"u64 {name} = {x};")
+# startpos = {
+#     "0": [5, 15, 25, 35, 45, 46, 47, 48, 49],
+#     "1": [4, 14, 24, 34, 44, 45, 46, 47, 48, 49],
+#     "2": [0, 1, 2, 3, 4, 14, 24, 34, 44],
+#     "3": [0, 1, 2, 3, 4, 5, 15, 25, 35, 45]
+# }
+#
+# for name, bitboard in startpos.items():
+#     x = indicesToBits(bitboard)
+#     x = f"{x:#066b}".strip()
+#     print(f"u64 {name} = {x};")
 
 # n = 14
 # i0 = getRightTop(n)
@@ -102,29 +102,29 @@ for name, bitboard in startpos.items():
 #
 
 # print(f"{x2:#02x}")
-# data = '{'
-# for i in range(50):
-#     x = 2**(i)
-#     x_0 = indicesToBits(getRightTop(i))
-#     x_1 = indicesToBits(getLeftTop(i))
-#     x_2 = indicesToBits(getLeftBottom(i))
-#     x_3 = indicesToBits(getRightBottom(i))
-#     data += "\n{"
-#     data += f"{x:#02x}"
-#     data += ", {"
-#     data += f"{x_0:#66b},".strip()
-#     # data += "\n"
-#     data += f"{x_1:#66b},".strip()
-#     # data += "\n"
-#     data += f"{x_2:#66b},".strip()
-#     # data += "\n"
-#     data += f"{x_3:#66b}".strip()
-#     data += "}},"
-#
-# data = data[:-1] + "}"
-#
-# with open('magic.txt', 'w') as file:
-#     file.write(data)
+data = '{'
+for i in range(50):
+    x = 2**(i)
+    x_0 = indicesToBits(getRightTop(i))
+    x_1 = indicesToBits(getLeftTop(i))
+    x_2 = indicesToBits(getLeftBottom(i))
+    x_3 = indicesToBits(getRightBottom(i))
+    data += "\n{"
+    data += f"{x:#02x}"
+    data += ", {"
+    data += f"{x_0:#66b},".strip()
+    # data += "\n"
+    data += f"{x_1:#66b},".strip()
+    # data += "\n"
+    data += f"{x_2:#66b},".strip()
+    # data += "\n"
+    data += f"{x_3:#66b}".strip()
+    data += "}},"
+
+data = data[:-1] + "}"
+
+with open('magic.txt', 'w') as file:
+    file.write(data)
 
 # print(f"costam costam {x0:#066b}")
 # print(f"costam costam {x1:#066b}")

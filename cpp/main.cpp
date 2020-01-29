@@ -41,16 +41,16 @@ int main() {
   // 1111011110111101111011110111101110011110
 
 
-
-  u64 whiteMen = 0b0000000000000000000000000000000000000000000000010011000000000000;
-  u64 whiteKings = 0b0000000000000000000000000000000000000000000000000000000000000000;
-  u64 blackMen = 0b0000000000000000000000000000000100000000001000000000001011000000;
+  // 100 00000 00000 00000 00000
+  u64 whiteMen = 0b0000000000000000000000000000000000000000000000000000010000000000;
+  u64 whiteKings = 0b0000000000000000000000000000000000000000010000000000000000000000;
+  u64 blackMen = 0b0000000000000000000000000000000000000000000001100000000111000000;
   u64 blackKings = 0b0000000000000000000000000000000000000000000000000000000000000000;
-  std::vector<std::vector<u64>*> captures;
-  Board::getMenCaptures(whiteMen, whiteKings, blackMen, blackKings, &captures);
+  std::vector<std::vector<u64>> captures = Board::getKingsCaptures(whiteMen, whiteKings, blackMen, blackKings);
+  std::cout << "size of captures: " << captures.size() << std::endl;
   for (auto& capture : captures) {
     std::cout << "capture" << std::endl;
-    for (auto& move : *capture) {
+    for (auto& move : capture) {
       std::cout << move << std::endl;
     }
   }

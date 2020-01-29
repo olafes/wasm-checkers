@@ -136,7 +136,36 @@ u64 Board::getJumperMen(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKin
   tmp &= whiteMen;
   return tmp;
 }
-std::vector<kingMoveChunk> Board::getJumperKings(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction) {
+kingMoveChunk Board::getJumperKing (u64 king, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction, u64 blackMenAfterCapture, u64 blackKingsAfterCapture) {
+  u64 occupied = (whiteMen|whiteKings|blackMen|blackKings)&Board::MASK_BOARD;
+  u64 empty = (~occupied)&Board::MASK_BOARD;
+  u64 target = 0;
+  u64 landing = 0;
+  target = ((blackMen)|(blackKings))&Board::MASK_KING_ATTACK.at(king)[direction];
+  if (target) {
+    if (direction <= 1)
+      target = Board::getMSB(target);
+    else
+      target = Board::getLSB(target);
+    if (target&(blackMenAfterCapture|blackKingsAfterCapture)) {
+      landing = Board::moveEvenSquares(target, direction)|Board::moveOddSquares(target, direction);
+      if (landing&empty) {
+        std::vector<u64> tmp = {landing};
+        u64 BORDER = Board::MASK_BORDER[direction];
+        while (!(landing&BORDER)) {
+          landing = Board::moveEvenSquares(landing, direction)|Board::moveOddSquares(landing, direction);
+          if (!(landing&empty))
+            break;
+          tmp.push_back(landing);
+        }
+        kingMoveChunk kmc = {king, target, Board::JUMPER_MEN_OPPOSITE_DIRECTIONS[direction], tmp};
+        return kmc;
+      }
+    }
+  }
+  throw std::invalid_argument("");
+}
+std::vector<kingMoveChunk> Board::getJumperKings(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction, u64 blackMenAfterCapture, u64 blackKingsAfterCapture) {
   std::vector<kingMoveChunk> data;
   u64 occupied = (whiteMen|whiteKings|blackMen|blackKings)&Board::MASK_BOARD;
   u64 empty = (~occupied)&Board::MASK_BOARD;
@@ -146,26 +175,10 @@ std::vector<kingMoveChunk> Board::getJumperKings(u64 whiteMen, u64 whiteKings, u
   while (whiteKings) {
     x = Board::getLSB(whiteKings);
     whiteKings &= ~x;
-    target = (blackMen|blackKings)&Board::MASK_KING_ATTACK.at(x)[direction];
-    if (!target)
-      continue;
-    if (direction <= 1)
-      target = Board::getLSB(target);
-    else
-      target = Board::getMSB(target);
-    landing = Board::moveEvenSquares(target, direction)|Board::moveOddSquares(target, direction);
-    if (landing&empty) {
-      std::vector<u64> tmp = {landing};
-      u64 BORDER = Board::MASK_BORDER[direction];
-      while (!(landing&BORDER)) {
-        landing = Board::moveEvenSquares(landing, direction)|Board::moveOddSquares(landing, direction);
-        if (!(landing&empty))
-          break;
-        tmp.push_back(landing);
-      }
-      kingMoveChunk kmc = {x, target, tmp};
+    try {
+      kingMoveChunk kmc = Board::getJumperKing(x, whiteMen, whiteKings, blackMen, blackKings, direction, blackMenAfterCapture, blackKingsAfterCapture);
       data.push_back(kmc);
-    }
+    } catch (const std::invalid_argument& e) {};
   }
   return data;
 }
@@ -199,34 +212,52 @@ void Board::makeKingCapture(u64*king, u64* whiteKings, u64* blackMen, u64* black
   *blackKings &= ~target;
   Board::makeKingMove(king, whiteKings, landing);
 }
-void Board::calculateManCaptures(u64 man, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 count, u8* n, Node* tree, std::vector<Node*>* found) {
+void Board::calculateManCaptures(u64 man, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 count, u8* n, std::vector<u64> move, std::vector<std::vector<u64>>* found) {
   u64 jumpers[] = {
     Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 0),
     Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 1),
     Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 2),
     Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 3),
   };
-  std::cout << "Man before if " << man << std::endl;
+  std::cout << "calculating caprues for position " << man << std::endl;
+  std::cout << "---------- jumper men in 4 directions ----------" << std::endl;
+  std::cout << jumpers[0] << std::endl;
+  std::cout << jumpers[1] << std::endl;
+  std::cout << jumpers[2] << std::endl;
+  std::cout << jumpers[3] << std::endl;
   if (!(man&(jumpers[0]|jumpers[1]|jumpers[2]|jumpers[3]))) {
-    std::cout << "calculation has finished with count: " << (int)count << std::endl;
-    std::cout << "curremt n: " << (int)(*n) << std::endl;
     if (count > *n) {
       *n = count;
       found->clear();
     }
     if (count == *n)
-      found->push_back(tree);
+      found->push_back(move);
   } else {
+    u64 x = 0;
+    u64 wm = 0;
+    u64 wk = 0;
+    u64 bm = 0;
+    u64 bk = 0;
     for (u8 i=0; i<4; i++) {
+      std::cout << "at position: " << man << std::endl;
+      std::cout << "looking in direction: " << (int)i << std::endl;
+      std::cout << "jumper at that direction " << jumpers[i] << std::endl;
       if (!(man&jumpers[i]))
         continue;
-      Board::makeManCapture(&man, &whiteMen, &blackMen, &blackKings, i);
-      Node* branch = tree->addChild(man);
-      Board::calculateManCaptures(man, whiteMen, whiteKings, blackMen, blackKings, count+1, n, branch, found);
+      std::cout << "found possible capture in direction: "<< (int)i << std::endl;
+      x = man;
+      wm = whiteMen;
+      wk = whiteKings;
+      bm = blackMen;
+      bk = blackKings;
+      std::vector<u64> mv = move;
+      Board::makeManCapture(&x, &wm, &bm, &bk, i);
+      mv.push_back(x);
+      Board::calculateManCaptures(x, wm, wk, bm, bk, count+1, n, mv, found);
     }
   }
 }
-void Board::getMenCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, std::vector<std::vector<u64>*>* captures) {
+std::vector<std::vector<u64>> Board::getMenCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings) {
   u64 jumpers[] = {
     Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 0),
     Board::getJumperMen(whiteMen, whiteKings, blackMen, blackKings, 1),
@@ -235,15 +266,12 @@ void Board::getMenCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 black
   };
 
   u8 n = 0;
-  std::vector<Node*> found;
-  std::vector<Node*> trees;
+  std::vector<std::vector<u64>> found;
   u64 x = 0;
   u64 wm = 0;
   u64 wk = 0;
   u64 bm = 0;
   u64 bk = 0;
-  Node* root;
-  Node* branch;
   for (u8 i=0; i<4; i++) {
     if (!jumpers[i])
       continue;
@@ -256,87 +284,109 @@ void Board::getMenCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 black
       wk = whiteKings;
       bm = blackMen;
       bk = blackKings;
-      root = new Node(x);
-      trees.push_back(root);
+      std::vector<u64> move = {x};
       Board::makeManCapture(&x, &wm, &bm, &bk, i);
-      branch = root->addChild(x);
-      Board::calculateManCaptures(x, wm, wk, bm, bk, 0, &n, branch, &found);
+      move.push_back(x);
+      Board::calculateManCaptures(x, wm, wk, bm, bk, 0, &n, move, &found);
     }
   }
-  std::cout << "size of found " << found.size() << std::endl;
-  for (auto& node : found) {
-    std::vector<u64>* moves = new std::vector<u64>;
-    node->populate(moves);
-    captures->push_back(moves);
-  }
+  return found;
 }
-void Board::calculateKingCaptures(u64 king, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 count, u8* n, Node* tree, std::vector<Node*>* found) {
-  std::vector<kingMoveChunk> jumperKings[] = {
-    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 0),
-    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 1),
-    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 2),
-    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 3)
-  };
-  if (jumperKings[0].empty() && jumperKings[1].empty() && jumperKings[2].empty() && jumperKings[3].empty()) {
+void Board::calculateKingCaptures(u64 king, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 count, u8* n, std::vector<u64> move, std::vector<std::vector<u64>>* found, u64 blackMenAfterCapture, u64 blackKingsAfterCapture) {
+  std::cout << "calculation started for: " << king << std::endl;
+  std::vector<kingMoveChunk> jumperKings;
+  for (u8 i=0; i<4; i++) {
+    try {
+      jumperKings.push_back(Board::getJumperKing(king, whiteMen, whiteKings, blackMen, blackKings, i, blackMenAfterCapture, blackKingsAfterCapture));
+    } catch (const std::invalid_argument& e) {};
+  }
+  std::cout << "found caprues in " << jumperKings.size() << " directions" << std::endl;
+  if (jumperKings.size() == 0) {
+    std::cout << "==================calculation has finished with count: " << (int)count << std::endl;
+    std::cout << "==================current n: " << (int)*n << std::endl;
     if (count > *n) {
+      std::cout << "######################################## clearning found " << std::endl;
       *n = count;
       found->clear();
     }
-    if (count == *n)
-      found->push_back(tree);
+    if (count == *n) {
+      std::cout << "##### adding to found vector with size: " << move.size() << std::endl;
+      found->push_back(move);
+    }
   } else {
-    for (u8 i=0; i<4; i++) {
-      if (jumperKings[i].empty())
-        continue;
+    for (auto& jumperKing : jumperKings) {
+      u64 x = 0;
       u64 wm = 0;
       u64 wk = 0;
       u64 bm = 0;
       u64 bk = 0;
-      for (auto& jumperKing : jumperKings[i]) {
-        for (auto& landing : jumperKing.landing) {
-          wm = whiteMen;
-          wk = whiteKings;
-          bm = blackMen;
-          bk = blackKings;
-          Board::makeKingCapture(&(jumperKing.from), &wk, &bm, &bk, landing, jumperKing.capture);
-          Node* branch = tree->addChild(landing);
-          Board::calculateKingCaptures(jumperKing.from, wm, wk, bm, bk, count+1, n, branch, found);
-        }
-      }
-    }
-  }
-}
-void Board::getKingsCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, std::vector<std::vector<u64>*>* captures) {
-  std::vector<kingMoveChunk> jumperKings[] = {
-    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 0),
-    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 1),
-    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 2),
-    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 3)
-  };
-  u8 n = 0;
-  std::vector<Node*> found;
-  std::vector<Node*> trees;
-  u64 wm = 0;
-  u64 wk = 0;
-  u64 bm = 0;
-  u64 bk = 0;
-  Node* root;
-  Node* branch;
-  for (u8 i=0; i<4; i++) {
-    for (auto& jumperKing : jumperKings[i]) {
+      u64 bkAfter = 0;
+      u64 bmAfter = 0;
       for (auto& landing : jumperKing.landing) {
+        x = jumperKing.from;
         wm = whiteMen;
         wk = whiteKings;
         bm = blackMen;
         bk = blackKings;
-        root = new Node(jumperKing.from);
-        trees.push_back(root);
-        Board::makeKingCapture(&(jumperKing.from), &wk, &bm, &bk, landing, jumperKing.capture);
-        branch = root->addChild(landing);
-        Board::calculateKingCaptures(jumperKing.from, wm, wk, bm, bk, 0, &n, branch, &found);
+        bmAfter = blackMenAfterCapture;
+        bkAfter = blackKingsAfterCapture;
+        std::cout << "Making cpature on " << jumperKing.capture << std::endl;
+        std::cout << "Landing on " << landing << std::endl;
+        Board::makeKingCapture(&x, &wk, &bmAfter, &bkAfter, landing, jumperKing.capture);
+        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ " << bmAfter << std::endl;
+        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ " << bkAfter << std::endl;
+        std::vector<u64> mv = move;
+        mv.push_back(x);
+        Board::calculateKingCaptures(x, wm, wk, bm, bk, count+1, n, mv, found, bmAfter, bkAfter);
       }
     }
   }
+}
+std::vector<std::vector<u64>> Board::getKingsCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings) {
+  std::vector<kingMoveChunk> jumperKings[] = {
+    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 0, blackMen, blackKings),
+    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 1, blackMen, blackKings),
+    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 2, blackMen, blackKings),
+    Board::getJumperKings(whiteMen, whiteKings, blackMen, blackKings, 3, blackMen, blackKings)
+  };
+  u8 n = 0;
+  std::vector<std::vector<u64>> found;
+  u64 x = 0;
+  u64 wm = 0;
+  u64 wk = 0;
+  u64 bm = 0;
+  u64 bk = 0;
+  u64 bmAfter = 0;
+  u64 bkAfter = 0;
+  for (u8 i=0; i<4; i++) {
+    std::cout << "Jumper kings size " << jumperKings[i].size() << std::endl;
+    for (auto& jumperKing : jumperKings[i]) {
+      std::cout << ">>>>>>>Jumper king data: " << std::endl;
+      std::cout << "from: " << jumperKing.from << std::endl;
+      std::cout << "capture: " << jumperKing.capture << std::endl;
+      std::cout << "landing size: " << jumperKing.landing.size() << std::endl;
+      for (auto& landing : jumperKing.landing) {
+        std::cout << "Checking landing: " << landing << std::endl;
+        x = jumperKing.from;
+        wm = whiteMen;
+        wk = whiteKings;
+        bm = blackMen;
+        bk = blackKings;
+        bmAfter = blackMen;
+        bkAfter = blackKings;
+        std::cout << "Before capture: " << x << std::endl;
+        std::vector<u64> move = {x};
+        Board::makeKingCapture(&x, &wk, &bmAfter, &bkAfter, landing, jumperKing.capture);
+        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ " << bmAfter << std::endl;
+        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ " << bkAfter << std::endl;
+        move.push_back(x);
+        std::cout << "After capture: " << x << std::endl;
+        // branch = root->addChild(landing);
+        Board::calculateKingCaptures(x, wm, wk, bm, bk, 0, &n, move, &found, bmAfter, bkAfter);
+      }
+    }
+  }
+  return found;
 }
 u64 Board::getWhiteMen() {
   return Board::whiteMen;

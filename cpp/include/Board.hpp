@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <stdexcept>
 #include "./Node.hpp"
 
 typedef char u8;
@@ -12,6 +13,7 @@ typedef unsigned long long int u64;
 struct kingMoveChunk {
   u64 from;
   u64 capture;
+  u8 oppositeDirection;
   std::vector<u64> landing;
 };
 
@@ -37,18 +39,19 @@ public:
   // moved to public for testing
   static u64 moveEvenSquares(u64 bitboard, u8 direction);
   static u64 moveOddSquares(u64 bitboard, u8 direction);
-  static std::vector<kingMoveChunk> getJumperKings(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction);
+  static std::vector<kingMoveChunk> getJumperKings(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction,  u64 blackMenAfterCapture, u64 blackKingsAfterCapture);
   static u64 getJumperMen(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction);
+  static kingMoveChunk getJumperKing (u64 king, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction, u64 blackMenAfterCapture, u64 blackKingsAfterCapture);
   static void init(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, bool playerToMove);
   static void makeManMove(u64* man, u64* whiteMen, u8 direction);
   static void makeManCapture(u64* man, u64* whiteMen, u64* blackMen, u64* blackKings, u8 direction);
   static void makeKingMove(u64*king, u64* whiteKings, u64 landing);
   static void makeKingCapture(u64*king, u64* whiteKings, u64* blackMen, u64* blackKings, u64 landing, u64 target);
 
-  static void calculateManCaptures(u64 man, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 count, u8* n, Node* tree, std::vector<Node*>* found);
-  static void getMenCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, std::vector<std::vector<u64>*>* captures);
-  static void calculateKingCaptures(u64 man, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 count, u8* n, Node* tree, std::vector<Node*>* found);
-  static void getKingsCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, std::vector<std::vector<u64>*>* captures);
+  static void calculateManCaptures(u64 man, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 count, u8* n, std::vector<u64> move, std::vector<std::vector<u64>>* found);
+  static std::vector<std::vector<u64>> getMenCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings);
+  static void calculateKingCaptures(u64 king, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 count, u8* n, std::vector<u64> move, std::vector<std::vector<u64>>* found, u64 blackMenAfterCapture, u64 blackKingsAfterCapture);
+  static std::vector<std::vector<u64>> getKingsCaptures(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings);
   // real public
   static u64 getWhiteMen();
   static u64 getWhiteKings();

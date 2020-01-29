@@ -37,6 +37,21 @@ int main() {
   // u64 z = Board::moveOddSquares(x, 2);
   // std::cout << x << " " <<  y << " " << z << std::endl;
 
+  // u64 x = 0b01001110011000;
+  // u64 lsb = x&(~x+1);
+  // std::cout << lsb-1 << std::endl;
+
+  // u64 bitboard = 0b00000100111000010111;
+  //                       111111111111111
+  // bitboard|=(bitboard>>1);
+  // bitboard|=(bitboard>>2);
+  // bitboard|=(bitboard>>4);
+  // bitboard|=(bitboard>>8);
+  // bitboard|=(bitboard>>16);
+  // bitboard|=(bitboard>>32);
+  // std::cout << bitboard << std::endl;
+
+
 
   // 1111011110111101111011110111101110011110
 
@@ -46,14 +61,37 @@ int main() {
   u64 whiteKings = 0b0000000000000000000000000000000000000000010000000000000000000000;
   u64 blackMen = 0b0000000000000000000000000000000000000000000001100000000111000000;
   u64 blackKings = 0b0000000000000000000000000000000000000000000000000000000000000000;
-  std::vector<std::vector<u64>> captures = Board::getKingsCaptures(whiteMen, whiteKings, blackMen, blackKings);
-  std::cout << "size of captures: " << captures.size() << std::endl;
-  for (auto& capture : captures) {
-    std::cout << "capture" << std::endl;
-    for (auto& move : capture) {
-      std::cout << move << std::endl;
+
+  u64 menMovers0 = Board::getMenMovers(whiteMen, whiteKings, blackMen, blackKings, 0);
+  u64 menMovers1 = Board::getMenMovers(whiteMen, whiteKings, blackMen, blackKings, 1);
+  std::vector<kingMoveChunk> kingMovers[] = {
+    Board::getKingsMovers(whiteMen, whiteKings, blackMen, blackKings, 0),
+    Board::getKingsMovers(whiteMen, whiteKings, blackMen, blackKings, 1),
+    Board::getKingsMovers(whiteMen, whiteKings, blackMen, blackKings, 2),
+    Board::getKingsMovers(whiteMen, whiteKings, blackMen, blackKings, 3),
+  };
+  std::cout << "Movers 0: " << menMovers0 << std::endl;
+  std::cout << "Movers 1: " << menMovers1 << std::endl;
+
+  for (u8 i=0; i<4; i++) {
+    std::cout << "King direction " << (int)i << std::endl;
+    for (auto& king : kingMovers[i]) {
+      std::cout << "King " << king.from << std::endl;
+      std::cout << "LANDING SIZE: " << king.landing.size() << std::endl;
+      for (auto& landing: king.landing) {
+        std::cout << "landing " << landing << std::endl;
+      }
     }
   }
+
+  // std::vector<std::vector<u64>> captures = Board::getKingsCaptures(whiteMen, whiteKings, blackMen, blackKings);
+  // std::cout << "size of captures: " << captures.size() << std::endl;
+  // for (auto& capture : captures) {
+  //   std::cout << "capture" << std::endl;
+  //   for (auto& move : capture) {
+  //     std::cout << move << std::endl;
+  //   }
+  // }
 
   // Node tree(10);
   // std::cout << tree.position << std::endl;

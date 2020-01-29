@@ -12,6 +12,12 @@ const u64 Board::MASK_JUMPER_MEN_BORDER[] = {
   0b01111011110111101111011110111101111011110000000000,
   0b11110111101111011110111101111011110111100000000000
 };
+const u64 Board::MASK_MOVER_MEN_BORDER[] = {
+  0b0000000000000011111000000000100000000010000000001000000000100000,
+  0b0000000000000011111100000000010000000001000000000100000000010000,
+  0b0000000000000000000100000000010000000001000000000100000000011111,
+  0b0000000000000000001000000000100000000010000000001000000000111111
+};
 const u64 Board::MASK_BORDER[] = {
   0b0000000000000000000100000000010000000001000000000100000000011111,
   0b0000000000000000001000000000100000000010000000001000000000111111,
@@ -73,6 +79,16 @@ const std::map<u64, std::vector<u64>> Board::MASK_KING_ATTACK = {
 };
 const u8 Board::JUMPER_MEN_OPPOSITE_DIRECTIONS[] = {2, 3, 0, 1};
 
+u64 Board::clearRightOfMSB(u64 bitboard) {
+  u64 x = bitboard;
+  bitboard|=(bitboard>>1);
+  bitboard|=(bitboard>>2);
+  bitboard|=(bitboard>>4);
+  bitboard|=(bitboard>>8);
+  bitboard|=(bitboard>>16);
+  bitboard|=(bitboard>>32);
+  return x&(~bitboard);
+}
 u64 Board::getMSB(u64 bitboard) {
   bitboard|=(bitboard>>1);
   bitboard|=(bitboard>>2);
@@ -126,6 +142,56 @@ u64 Board::moveOddSquares(u64 bitboard, u8 direction) {
   }
   return bitboard;
 }
+u64 Board::getMenMovers(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction) {
+  u64 empty = (~Board::MASK_MOVER_MEN_BORDER[direction])&Board::getEmpty(whiteMen, whiteKings, blackMen, blackKings);
+  // std::cout << "men empty: " << empty << std::endl;
+  u8 oppositeDirection = Board::JUMPER_MEN_OPPOSITE_DIRECTIONS[direction];
+  // std::cout << "opposite "
+  u64 movers = whiteMen&(Board::moveEvenSquares(empty, oppositeDirection)|Board::moveOddSquares(empty, oppositeDirection));
+  return movers;
+}
+u64 Board::getKingMoves(u64 king, u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction) {
+  u64 empty = Board::getEmpty(whiteMen, whiteKings, blackMen, blackKings);
+  // u64 occupied = (~empty)&Board::MASK_KING_ATTACK.at(king)[direction];
+  u64 mask = Board::MASK_KING_ATTACK.at(king)[direction];
+  u64 target = (~empty)&mask;
+  std::cout << "found target bitboard " << target << std::endl;
+  if (direction <= 1) {
+    target|=(target>>1);
+    target|=(target>>2);
+    target|=(target>>4);
+    target|=(target>>8);
+    target|=(target>>16);
+    target|=(target>>32);
+    target = (~target)&mask;
+  } else {
+    target = Board::getLSB(target)-1;
+    target &= mask;
+  }
+  std::cout << "after target " << target << std::endl;
+  return target;
+}
+std::vector<kingMoveChunk> Board::getKingsMovers(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction) {
+  std::vector<kingMoveChunk> kingsMovers;
+  u64 x = 0;
+  u64 wk = whiteKings;
+  while (wk) {
+    x = Board::getLSB(wk);
+    std::cout << (int)direction << " calculating king: " << x << std::endl;
+    wk &= ~x;
+    u64 landingBitboard = Board::getKingMoves(x, whiteMen, whiteKings, blackMen, blackKings, direction);
+    std::vector<u64> landing;
+    u64 y = 0;
+    while (landingBitboard) {
+      y = Board::getLSB(landingBitboard);
+      landingBitboard &= ~y;
+      landing.push_back(y);
+    }
+    kingMoveChunk kmc = {x, 0ULL, landing};
+    kingsMovers.push_back(kmc);
+  }
+  return kingsMovers;
+}
 u64 Board::getJumperMen(u64 whiteMen, u64 whiteKings, u64 blackMen, u64 blackKings, u8 direction) {
   u64 tmp = Board::getEmpty(whiteMen, whiteKings, blackMen, blackKings)&Board::MASK_JUMPER_MEN_BORDER[direction];
   u8 oppositeDirection = Board::JUMPER_MEN_OPPOSITE_DIRECTIONS[direction];
@@ -158,7 +224,7 @@ kingMoveChunk Board::getJumperKing (u64 king, u64 whiteMen, u64 whiteKings, u64 
             break;
           tmp.push_back(landing);
         }
-        kingMoveChunk kmc = {king, target, Board::JUMPER_MEN_OPPOSITE_DIRECTIONS[direction], tmp};
+        kingMoveChunk kmc = {king, target, tmp};
         return kmc;
       }
     }
@@ -172,9 +238,10 @@ std::vector<kingMoveChunk> Board::getJumperKings(u64 whiteMen, u64 whiteKings, u
   u64 x = 0;
   u64 target = 0;
   u64 landing = 0;
-  while (whiteKings) {
-    x = Board::getLSB(whiteKings);
-    whiteKings &= ~x;
+  u64 wk = whiteKings;
+  while (wk) {
+    x = Board::getLSB(wk);
+    wk &= ~x;
     try {
       kingMoveChunk kmc = Board::getJumperKing(x, whiteMen, whiteKings, blackMen, blackKings, direction, blackMenAfterCapture, blackKingsAfterCapture);
       data.push_back(kmc);

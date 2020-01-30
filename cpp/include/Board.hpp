@@ -36,10 +36,13 @@ private:
   static const std::map<u64, std::vector<u64>> MASK_KING_ATTACK;
   static const std::map<u64, std::vector<u64>> MASK_KING_ATTACK_WITHOUT_BORDER;
   static const u8 OPPOSITE_DIRECTIONS[];
+  static const u64 BYTE_REVERSE[];
   static u64 getMSB(u64 bitboard);
   static u64 getLSB(u64 bitboard);
+  static u64 setLeftSideOfMSB(u64 bitboard);
   static u64 setRightSideOfMSB(u64 bitboard);
   static u64 setLeftSideOfLSB(u64 bitboard);
+  static u64 reverse(u64 bitboard);
   static u64 setRightSideOfLSB(u64 bitboard);
   static u64 getEmpty(Board::board state);
   static u64 moveEvenSquares(u64 bitboard, u8 direction);
@@ -62,8 +65,8 @@ private:
 
   Board::board state;
   bool playerToMove;
+  std::vector<Board::board> history;
 public:
-  static u64 setLeftSideOfMSB(u64 bitboard);
   Board(Board::board state, bool playerToMove): state{state}, playerToMove{playerToMove} {};
   Board::board getState();
   u64 getWhiteMen();
@@ -78,9 +81,19 @@ public:
   void setBlackKings(u64 blackKings);
   void setPlayerToMove(bool playerToMove);
 
+  Board::board getPlayerState(bool player);
   std::vector<move> getLegalPushes();
   std::vector<move> getLegalCaptures();
   std::vector<move> getLegalMoves();
+  void makeMove(Board::move mv);
+  u8 getResult();
 };
+
+bool operator==(const Board::board& a, const Board::board& b) {
+  return (a->whiteMen == b->whiteMen)||
+         (a->whiteKings == b->whiteKings)||
+         (a->blackMen == b->blackMen)||
+         (a->blackKings == b->blackKings);
+}
 
 #endif

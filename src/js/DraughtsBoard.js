@@ -25,15 +25,18 @@ export class DraughtsBoard {
           e.preventDefault();
         },
         drop: e => {
+          console.log(this);
           this.$drag.style.left = `${e.target.offsetLeft}px`;
           this.$drag.style.top = `${e.target.offsetTop}px`;
         }
       },
       piece: {
         dragstart: e => {
+          // e.preventDefault();
           this.$drag = e.target;
         },
         dragend: e => {
+          // e.preventDefault();
           this.$drag = null;
         }
       },

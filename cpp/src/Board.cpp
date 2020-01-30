@@ -1,8 +1,5 @@
 #include "../include/Board.hpp"
 //private
-Board::board Board::state = { 0ULL, 0ULL, 0ULL, 0ULL };
-bool Board::playerToMove = 0;
-
 const u64 Board::MASK_BORDER[] = {
   0b00000100000000010000000001000000000100000000011111,
   0b00001000000000100000000010000000001000000000111111,
@@ -202,10 +199,10 @@ u64 Board::moveSquares(u64 bitboard, u8 direction) {
   return Board::moveEvenSquares(bitboard, direction)|Board::moveOddSquares(bitboard, direction);
 }
 u64 Board::getMenMovers(Board::board state, u8 direction) {
+  std::vector<Board::move> movers;
   u64 empty = Board::MASK_MOVER_MEN[direction]&Board::getEmpty(state);
   u8 oppositeDirection = Board::OPPOSITE_DIRECTIONS[direction];
-  u64 movers = state.whiteMen&Board::moveSquares(empty, oppositeDirection);
-  return movers;
+  return state.whiteMen&Board::moveSquares(empty, oppositeDirection);
 }
 u64 Board::getKingMoves(u64 king, Board::board state, u8 direction) {
   u64 empty = Board::getEmpty(state);
@@ -242,27 +239,28 @@ u64 Board::getJumperMen(Board::board state, u8 direction) {
   return jumpers&state.whiteMen;
 }
 Board::kingMoveChunk Board::getJumperKing (u64 king, Board::board state, u64 alreadyCaptured, u8 direction) {
+  u64 black = state.blackMen|state.blackKings;
+  state.blackMen |= alreadyCaptured;
   u64 empty = Board::getEmpty(state);
+  u64 occupied = ~empty;
   u64 mask = Board::MASK_KING_ATTACK_WITHOUT_BORDER.at(king)[direction];
-  u64 black = (state.blackMen|state.blackKings);
-  u64 target = black&mask;
+  u64 target = occupied&mask;
   if (target) {
     if (direction <= 1)
       target = Board::getMSB(target);
     else
       target = Board::getLSB(target);
-    if (target&black&(~alreadyCaptured)) {
-      u64 landing = Board::setRightSideOfMSB(target)&empty&mask;
-      std::vector<u64> landings = {};
-      while (landing) {
-        u64 x = Board::getLSB(landing);
-        landing &= ~x;
-        landings.push_back(x);
+    u64 next = Board::moveSquares(target, direction);
+    if (target&black && next&empty) {
+      std::vector<u64> landings = {next};
+      while (next&mask) {
+        next = Board::moveSquares(next, direction);
+        if (next&occupied)
+          break;
+        landings.push_back(next);
       }
-      if (landings.size()) {
-        Board::kingMoveChunk result = {king, target, landings};
-        return result;
-      }
+      Board::kingMoveChunk result = {king, target, landings};
+      return result;
     }
   }
   throw std::invalid_argument("");
@@ -280,10 +278,6 @@ std::vector<Board::kingMoveChunk> Board::getJumperKings(Board::board state, u64 
     } catch (const std::invalid_argument& e) {};
   }
   return data;
-}
-void Board::init(Board::board state, bool playerToMove) {
-  Board::state = state;
-  Board::playerToMove = playerToMove;
 }
 void Board::makeManMove(u64* man, Board::board* state, u8 direction) {
   state->whiteMen &= ~(*man);
@@ -324,6 +318,7 @@ void Board::calculateManCaptures(u64 man, Board::board state, u8 count, u8* n, B
       board _state = state;
       move _mv = mv;
       _mv.captures.push_back(Board::makeManCapture(&_man, &_state, i));
+      _mv.positions.push_back(_man);
       Board::calculateManCaptures(_man, _state, count+1, n, _mv, found);
     }
   } else {
@@ -335,14 +330,13 @@ void Board::calculateManCaptures(u64 man, Board::board state, u8 count, u8* n, B
       found->push_back(mv);
   }
 }
-std::vector<Board::move> Board::getMenCaptures(Board::board state) {
+std::vector<Board::move> Board::getMenCaptures(Board::board state, u8* depth) {
   u64 jumpers[] = {
     Board::getJumperMen(state, 0),
     Board::getJumperMen(state, 1),
     Board::getJumperMen(state, 2),
     Board::getJumperMen(state, 3),
   };
-  u8 n = 0;
   std::vector<move> found;
   for (u8 i=0; i<4; i++) {
     if (!jumpers[i])
@@ -354,7 +348,7 @@ std::vector<Board::move> Board::getMenCaptures(Board::board state) {
       board _state = state;
       u64 capture = Board::makeManCapture(&_man, &_state, i);
       move _mv = {{man, _man}, {capture}};
-      Board::calculateManCaptures(_man, _state, 0, &n, _mv, &found);
+      Board::calculateManCaptures(_man, _state, 0, depth, _mv, &found);
     }
   }
   return found;
@@ -379,7 +373,7 @@ void Board::calculateKingCaptures(u64 king, Board::board state, u64 alreadyCaptu
         u64 _king = king;
         board _state = state;
         u64 _alreadyCaptured = alreadyCaptured|jumperKing.capture;
-        Board::makeKingMove(&_king, &state, landing);
+        Board::makeKingCapture(&_king, &_state, landing, jumperKing.capture);
         Board::move _mv = mv;
         _mv.positions.push_back(_king);
         _mv.captures.push_back(jumperKing.capture);
@@ -388,76 +382,92 @@ void Board::calculateKingCaptures(u64 king, Board::board state, u64 alreadyCaptu
     }
   }
 }
-std::vector<Board::move> Board::getKingsCaptures(Board::board state) {
+std::vector<Board::move> Board::getKingsCaptures(Board::board state, u8* depth) {
   std::vector<kingMoveChunk> jumperKings[] = {
     Board::getJumperKings(state, 0ULL, 0),
     Board::getJumperKings(state, 0ULL, 1),
     Board::getJumperKings(state, 0ULL, 2),
     Board::getJumperKings(state, 0ULL, 3)
   };
-  u8 n = 0;
   std::vector<move> found;
   for (u8 i=0; i<4; i++) {
     for (auto& jumperKing : jumperKings[i]) {
       for (auto& landing : jumperKing.landing) {
-        u64 _man = jumperKing.from;
+        u64 _king = jumperKing.from;
         board _state = state;
-        Board::makeKingCapture(&_man, &_state, landing, jumperKing.capture);
+        Board::makeKingCapture(&_king, &_state, landing, jumperKing.capture);
         u64 _alreadyCaptured = jumperKing.capture;
-        move _mv = {{jumperKing.from, _man}, {jumperKing.capture}};
-        Board::calculateKingCaptures(_man, _state, _alreadyCaptured, 0, &n, _mv, &found);
+        move _mv = {{jumperKing.from, _king}, {jumperKing.capture}};
+        Board::calculateKingCaptures(_king, _state, _alreadyCaptured, 0, depth, _mv, &found);
       }
     }
   }
   return found;
 }
-std::vector<Board::move> getLegalMoves(Board::board state) {
-  std::vector<Board::move> moves;
-  // std::vector<std::vector<u64>> captures[] {
-  //   Board::getMenCaptures(whiteMen, whiteKings, blackMen, blackKings),
-  //   Board::getKingsCaptures(whiteMen, whiteKings, blackMen, blackKings)
-  // };
-  // if (captures[0].size() && captures[1].size()) {
-  //   for (auto& capture: captures[0]) {
-  //     move_struct m = {capture[0], capture[1], 0ULL}
-  //   }
-  // }
-  return moves;
-}
 
+//public
 Board::board Board::getState() {
-  return Board::state;
+  return this->state;
 }
 u64 Board::getWhiteMen() {
-  return Board::state.whiteMen;
+  return this->state.whiteMen;
 }
 u64 Board::getWhiteKings() {
-  return Board::state.whiteKings;
+  return this->state.whiteKings;
 }
 u64 Board::getBlackMen() {
-  return Board::state.blackMen;
+  return this->state.blackMen;
 }
 u64 Board::getBlackKings() {
-  return Board::state.blackKings;
+  return this->state.blackKings;
 }
 bool Board::getPlayerToMove() {
-  return Board::playerToMove;
+  return this->playerToMove;
 }
 void Board::setState(Board::board state) {
-  Board::state = state;
+  this->state = state;
 }
 void Board::setWhiteMen(u64 whiteMen) {
-  Board::state.whiteMen = whiteMen;
+  this->state.whiteMen = whiteMen;
 }
 void Board::setWhiteKings(u64 whiteKings) {
-  Board::state.whiteKings = whiteKings;
+  this->state.whiteKings = whiteKings;
 }
 void Board::setBlackMen(u64 blackMen) {
-  Board::state.blackMen = blackMen;
+  this->state.blackMen = blackMen;
 }
 void Board::setBlackKings(u64 blackKings) {
-  Board::state.blackKings = blackKings;
+  this->state.blackKings = blackKings;
 }
 void Board::setPlayerToMove(bool playerToMove) {
-  Board::playerToMove = playerToMove;
+  this->playerToMove = playerToMove;
+}
+std::vector<Board::move> Board::getLegalPushes() {
+  std::vector<Board::move> pushes;
+  for (u8 i=0; i<4; i++) {
+    u64 bitboard = Board::getMenMovers(this->state, i);
+    while (bitboard) {
+      u64 mover = Board::getLSB(bitboard);
+      bitboard &= ~mover;
+      u64 landing = Board::moveSquares(mover, i);
+      Board::move mv = {{mover, landing}, {0ULL}};
+      pushes.push_back(mv);
+    }
+    std::vector<Board::move> kingsPushes = Board::getKingsMovers(this->state, i);
+    pushes.insert(pushes.end(), kingsPushes.begin(), kingsPushes.end());
+  }
+  return pushes;
+}
+std::vector<Board::move> Board::getLegalCaptures() {
+  u8 depth = 0;
+  std::vector<Board::move> kings = Board::getKingsCaptures(this->state, &depth);
+  std::vector<Board::move> men = Board::getMenCaptures(this->state, &depth);
+  men.insert(men.end(), kings.begin(), kings.end());
+  return men;
+}
+std::vector<Board::move> Board::getLegalMoves() {
+  std::vector<Board::move> captures = Board::getLegalCaptures();
+  if (captures.size())
+    return captures;
+  return Board::getLegalPushes();
 }

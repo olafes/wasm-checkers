@@ -38,7 +38,6 @@ private:
   static const u8 OPPOSITE_DIRECTIONS[];
   static u64 getMSB(u64 bitboard);
   static u64 getLSB(u64 bitboard);
-  static u64 setLeftSideOfMSB(u64 bitboard);
   static u64 setRightSideOfMSB(u64 bitboard);
   static u64 setLeftSideOfLSB(u64 bitboard);
   static u64 setRightSideOfLSB(u64 bitboard);
@@ -52,33 +51,36 @@ private:
   static Board::kingMoveChunk getJumperKing (u64 king, Board::board state, u64 alreadyCaptured, u8 direction);
   static std::vector<Board::kingMoveChunk> getJumperKings(Board::board state, u64 alreadyCaptured, u8 direction);
   static u64 getJumperMen(Board::board state, u8 direction);
-  static void init(board state, bool playerToMove);
   static void makeManMove(u64* man, Board::board* state, u8 direction);
   static u64 makeManCapture(u64* man, Board::board* state, u8 direction);
   static void makeKingMove(u64* king, Board::board* state, u64 landing);
   static void makeKingCapture(u64* king, Board::board* state, u64 landing, u64 target);
   static void calculateManCaptures(u64 man, Board::board state, u8 count, u8* n, Board::move mv, std::vector<Board::move>* found);
-  static std::vector<move> getMenCaptures(Board::board state);
+  static std::vector<move> getMenCaptures(Board::board state, u8* depth);
   static void calculateKingCaptures(u64 king, Board::board state, u64 alreadyCaptured, u8 count, u8* n, Board::move mv, std::vector<Board::move>* found);
-  static std::vector<Board::move> getKingsCaptures(Board::board state);
-  static board state;
-  static bool playerToMove;
+  static std::vector<Board::move> getKingsCaptures(Board::board state, u8* depth);
 
+  Board::board state;
+  bool playerToMove;
 public:
-  static Board::board getState();
-  static u64 getWhiteMen();
-  static u64 getWhiteKings();
-  static u64 getBlackMen();
-  static u64 getBlackKings();
-  static bool getPlayerToMove();
-  static void setState(Board::board state);
-  static void setWhiteMen(u64 whiteMen);
-  static void setWhiteKings(u64 whiteKings);
-  static void setBlackMen(u64 blackMen);
-  static void setBlackKings(u64 blackKings);
-  static void setPlayerToMove(bool playerToMove);
+  static u64 setLeftSideOfMSB(u64 bitboard);
+  Board(Board::board state, bool playerToMove): state{state}, playerToMove{playerToMove} {};
+  Board::board getState();
+  u64 getWhiteMen();
+  u64 getWhiteKings();
+  u64 getBlackMen();
+  u64 getBlackKings();
+  bool getPlayerToMove();
+  void setState(Board::board state);
+  void setWhiteMen(u64 whiteMen);
+  void setWhiteKings(u64 whiteKings);
+  void setBlackMen(u64 blackMen);
+  void setBlackKings(u64 blackKings);
+  void setPlayerToMove(bool playerToMove);
 
-  static std::vector<move> getLegalMoves(board state);
+  std::vector<move> getLegalPushes();
+  std::vector<move> getLegalCaptures();
+  std::vector<move> getLegalMoves();
 };
 
 #endif

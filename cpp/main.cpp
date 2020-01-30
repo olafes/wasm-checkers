@@ -34,6 +34,26 @@ extern "C" {
 };
 
 int main() {
+  Board::board state = {
+    0b0000000000000000000000000000000000000000000000000000010000000000,
+    0b0000000000000000000000000000000000000000010000000000000000000000,
+    0b0000000000000000000000000000000000000000000001100000000111000000,
+    0b0000000000000000000000000000000000000000000000000000000000000000
+  };
+  Board board(state, false);
+  std::vector<Board::move> moves = board.getLegalMoves();
+  std::cout << "Legal moves: " << moves.size() << std::endl;
+  for (auto& mv : moves) {
+    std::cout << "=====================================" << std::endl;
+    std::cout << "From: " << mv.positions[0] << std::endl;
+    for (u8 i=1; i<mv.positions.size(); i++) {
+      std::cout << "To: " << mv.positions[i] << std::endl;
+      std::cout << "Capture: " << mv.captures[i-1] << std::endl;
+    }
+  }
+
+
+
   // std::vector<test> x = {{8}};
 
   // u64 x = 2ULL;

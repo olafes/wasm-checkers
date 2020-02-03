@@ -1,2 +1,2 @@
-g++ test.cpp "../src/Board.cpp" -o test.o
+g++ test.cpp ../src/Board.cpp ../src/Utils.cpp -o test.o
 ./test.o

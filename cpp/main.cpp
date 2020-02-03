@@ -7,7 +7,7 @@ typedef char u8;
 typedef unsigned long long int u64;
 
 extern "C" {
-  void init(u8 whiteMen[],
+  u8 init(u8 whiteMen[],
       u8 whiteMenLength,
       u8 whiteKings[],
       u8 whiteKingsLength,
@@ -33,14 +33,33 @@ extern "C" {
   u8 getResult();
 };
 
+Board* game = NULL;
+
+u8 init(u8 whiteMen[],
+    u8 whiteMenLength,
+    u8 whiteKings[],
+    u8 whiteKingsLength,
+    u8 blackMen[],
+    u8 blackMenLength,
+    u8 blackKings[],
+    u8 blackKingsLength,
+    bool playerToMove) {
+
+  // Board::board state = {
+  // };
+
+  return whiteMenLength*whiteMen[0]*2;
+}
+
 int main() {
   Board::board state = {
     0b0000000000000000000000000000000000000000000000000000010000000000,
     0b0000000000000000000000000000000000000000010000000000000000000000,
     0b0000000000000000000000000000000000000000000001100000000111000000,
-    0b0000000000000000000000000000000000000000000000000000000000000000
+    0b0000000000000000000000000000000000000000000000000000000000000000,
+    false
   };
-  Board board(state, false);
+  Board board(state);
   std::vector<Board::move> moves = board.getLegalMoves();
   std::cout << "Legal moves: " << moves.size() << std::endl;
   for (auto& mv : moves) {

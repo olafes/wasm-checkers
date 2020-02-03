@@ -1,1 +1,1 @@
-g++ main.cpp src/Board.cpp -o main.o
+g++ main.cpp src/Board.cpp src/Utils.cpp -o main.o

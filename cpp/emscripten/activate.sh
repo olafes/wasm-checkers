@@ -1,1 +1,1 @@
-echo "nie pamietam jaka jest sciezka"
+source ../../../emsdk/emsdk_env.sh

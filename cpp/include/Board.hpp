@@ -5,6 +5,7 @@
 #include <map>
 #include <iostream>
 #include <stdexcept>
+#include "../include/Utils.hpp"
 
 typedef char u8;
 typedef unsigned long long int u64;
@@ -20,6 +21,7 @@ public:
     u64 whiteKings;
     u64 blackMen;
     u64 blackKings;
+    u64 playerToMove;
   };
 private:
   struct kingMoveChunk {
@@ -27,27 +29,15 @@ private:
     u64 capture;
     std::vector<u64> landing;
   };
-  static const u64 MASK_BOARD = 0b11111111111111111111111111111111111111111111111111;
-  static const u64 MASK_EVEN_ROW = 0b00000111110000011111000001111100000111110000011111;
-  static const u64 MASK_ODD_ROW = 0b11111000001111100000111110000011111000001111100000;
+  static const u64 MASK_BOARD;
   static const u64 MASK_BORDER[];
   static const u64 MASK_MOVER_MEN[];
   static const u64 MASK_JUMPER_MEN[];
   static const std::map<u64, std::vector<u64>> MASK_KING_ATTACK;
   static const std::map<u64, std::vector<u64>> MASK_KING_ATTACK_WITHOUT_BORDER;
   static const u8 OPPOSITE_DIRECTIONS[];
-  static const u64 BYTE_REVERSE[];
-  static u64 getMSB(u64 bitboard);
-  static u64 getLSB(u64 bitboard);
-  static u64 setLeftSideOfMSB(u64 bitboard);
-  static u64 setRightSideOfMSB(u64 bitboard);
-  static u64 setLeftSideOfLSB(u64 bitboard);
-  static u64 reverse(u64 bitboard);
-  static u64 setRightSideOfLSB(u64 bitboard);
+
   static u64 getEmpty(Board::board state);
-  static u64 moveEvenSquares(u64 bitboard, u8 direction);
-  static u64 moveOddSquares(u64 bitboard, u8 direction);
-  static u64 moveSquares(u64 bitboard, u8 direction);
   static u64 getMenMovers(Board::board state, u8 direction);
   static u64 getKingMoves(u64 king, Board::board state, u8 direction);
   static std::vector<Board::move> getKingsMovers(Board::board state, u8 direction);
@@ -64,10 +54,9 @@ private:
   static std::vector<Board::move> getKingsCaptures(Board::board state, u8* depth);
 
   Board::board state;
-  bool playerToMove;
   std::vector<Board::board> history;
 public:
-  Board(Board::board state, bool playerToMove): state{state}, playerToMove{playerToMove} {};
+  Board(Board::board state): state{state} {};
   Board::board getState();
   u64 getWhiteMen();
   u64 getWhiteKings();
@@ -81,7 +70,6 @@ public:
   void setBlackKings(u64 blackKings);
   void setPlayerToMove(bool playerToMove);
 
-  Board::board getPlayerState(bool player);
   std::vector<move> getLegalPushes();
   std::vector<move> getLegalCaptures();
   std::vector<move> getLegalMoves();
@@ -89,11 +77,6 @@ public:
   u8 getResult();
 };
 
-bool operator==(const Board::board& a, const Board::board& b) {
-  return (a->whiteMen == b->whiteMen)||
-         (a->whiteKings == b->whiteKings)||
-         (a->blackMen == b->blackMen)||
-         (a->blackKings == b->blackKings);
-}
+bool operator==(const Board::board& a, const Board::board& b);
 
 #endif
